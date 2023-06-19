@@ -1,9 +1,6 @@
 import streamlit
 import pandas
 import requests
-import snowflake.connector
-
-
 
 
 
@@ -38,11 +35,7 @@ fruityvice_normalized = pandas.json_normalize(fruityvice_response.json())
 # write your own comment - creates a dataframe
 streamlit.dataframe(fruityvice_normalized)
 
-
-
-#streamlit.text(fruityvice_response.json())
-#streamlit.dataframe(fruits_to_show)
-
+import snowflake.connector
 
 
 
