@@ -71,7 +71,7 @@ if submitted:
 
 # -------------------- Generate QR Code for Hosted Link --------------------
 if st.button("Generate QR Code for this Survey"):
-    hosted_link = "https://sustainablesurveyapp2025.streamlit.app/"  # Replace with actual deployed link
+    hosted_link = "https://surabhisustainablesurveyapp2025.streamlit.app/"  # Replace with actual deployed link
     qr = qrcode.QRCode(box_size=10, border=4)
     qr.add_data(hosted_link)
     qr.make(fit=True)
