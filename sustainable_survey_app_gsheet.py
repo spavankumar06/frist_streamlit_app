@@ -1,82 +1,77 @@
-# sustainable_survey_with_gsheet.py
 import streamlit as st
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime
+from google.oauth2.service_account import Credentials
 import qrcode
 from io import BytesIO
+from PIL import Image
 
-# -------------------- Google Sheets Setup --------------------
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+# ----------------------
+# CONFIG - UPDATE THESE
+# ----------------------
+SPREADSHEET_NAME = "Sustainability Responses"
+CREDENTIALS_FILE = "credentials.json"  # Path to your Google API JSON key
+SURVEY_LINK = "https://surabhisustainablesurveyapp2025.streamlit.app/"  # Update after hosting
+
+# ----------------------
+# GOOGLE SHEETS SETUP
+# ----------------------
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scopes)
 client = gspread.authorize(creds)
-sheet = client.open("Sustainable Survey Responses").sheet1
+sheet = client.open(SPREADSHEET_NAME).sheet1
 
-# -------------------- Survey Questions --------------------
+# ----------------------
+# SURVEY QUESTIONS
+# ----------------------
 questions = [
-    {"q": "Do you use renewable energy at home?", "type": "single",
-     "options": {"Yes, fully": 4, "Partially": 2, "No": 0, "Not sure": 0}},
-    {"q": "How do you usually commute?", "type": "single",
-     "options": {"Cycling/Walking": 4, "Electric/Hybrid car": 3, "Public transport": 2, "Car (petrol/diesel)": 0}},
-    {"q": "How often do you recycle paper, plastic, glass, or metals?", "type": "single",
-     "options": {"Always": 4, "Often": 3, "Sometimes": 2, "Never": 0}},
-    {"q": "Do you compost food or garden waste?", "type": "single",
-     "options": {"Yes": 4, "Planning to start": 2, "No": 0}},
-    {"q": "When shopping, do you...", "type": "multi",
-     "options": {"Bring reusable bags": 1, "Buy minimal packaging": 1, "Choose eco-friendly brands": 1, "None of the above": 0}},
-    {"q": "How often do you eat locally grown or seasonal produce?", "type": "single",
-     "options": {"Always": 4, "Often": 3, "Sometimes": 2, "Rarely": 0}},
-    {"q": "Do you use water-saving devices?", "type": "single",
-     "options": {"Yes": 4, "Not sure": 2, "No": 0}},
-    {"q": "Have you participated in environmental programs or clean-ups?", "type": "single",
-     "options": {"Yes": 4, "No": 0}}
+    ("How often do you use public transport?", {"Always": 5, "Sometimes": 3, "Never": 0}),
+    ("Do you recycle household waste?", {"Always": 5, "Sometimes": 3, "Never": 0}),
+    ("How often do you use reusable bags?", {"Always": 5, "Sometimes": 3, "Never": 0}),
+    ("Do you conserve electricity at home?", {"Always": 5, "Sometimes": 3, "Never": 0}),
+    ("How often do you buy locally produced goods?", {"Always": 5, "Sometimes": 3, "Never": 0})
 ]
 
-# -------------------- Streamlit UI --------------------
-st.set_page_config(page_title="Sustainable Lifestyle Survey", page_icon="🌱", layout="centered")
-st.title("🌱 Sustainable Lifestyle Survey")
-st.write("Answer the questions to see your Sustainability Score!")
+# ----------------------
+# STREAMLIT UI
+# ----------------------
+st.title("♻️ Sustainable Lifestyle Survey - Australia")
+st.write("Help us understand how sustainable your lifestyle is. Your answers will help promote eco-friendly initiatives.")
 
-score = 0
+name = st.text_input("Full Name")
+email = st.text_input("Email Address")
+
 answers = []
+score = 0
 
-with st.form("survey_form"):
-    for idx, q in enumerate(questions):
-        st.markdown(f"**{idx+1}. {q['q']}**")
-        if q["type"] == "single":
-            choice = st.radio("", list(q["options"].keys()), key=idx)
-            answers.append(choice)
-            score += q["options"][choice]
-        elif q["type"] == "multi":
-            choices = st.multiselect("", list(q["options"].keys()), key=idx)
-            answers.append(", ".join(choices))
-            for c in choices:
-                score += q["options"][c]
-    submitted = st.form_submit_button("Submit")
+for q, opts in questions:
+    choice = st.radio(q, list(opts.keys()), key=q)
+    answers.append(choice)
+    score += opts[choice]
 
-# -------------------- Store in Google Sheet --------------------
-if submitted:
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    for q, a in zip(questions, answers):
-        sheet.append_row([timestamp, q["q"], a, score])
-    st.success(f"Your Sustainability Score: {score}")
-
-    # Category
-    if score >= 30:
-        st.success("🌟 Sustainability Star – keep leading the way!")
-    elif score >= 20:
-        st.info("🌿 On the Right Path – great work, keep improving!")
+if st.button("Submit Survey"):
+    if not name or not email:
+        st.error("Please fill in your name and email.")
     else:
-        st.warning("🌎 Room to Grow – start with small, daily changes!")
+        sheet.append_row([name, email] + answers + [score])
+        st.success(f"Thank you {name}! Your sustainability score is {score} / {len(questions)*5}.")
 
-# -------------------- Generate QR Code for Hosted Link --------------------
-if st.button("Generate QR Code for this Survey"):
-    hosted_link = "https://surabhisustainablesurveyapp2025.streamlit.app/"  # Replace with actual deployed link
-    qr = qrcode.QRCode(box_size=10, border=4)
-    qr.add_data(hosted_link)
+# ----------------------
+# QR CODE GENERATION
+# ----------------------
+if st.button("Generate Survey QR Code"):
+    qr = qrcode.QRCode(box_size=10, border=2)
+    qr.add_data(SURVEY_LINK)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="green", back_color="white")
-
+    
+    img = qr.make_image(fill_color="#228B22", back_color="white")  # Forest green
     buf = BytesIO()
     img.save(buf)
-    st.image(buf.getvalue(), caption="Scan to Take the Survey")
+    buf.seek(0)
+    
+    st.image(img, caption="Scan to take the survey")
+    st.download_button(
+        label="Download QR Code",
+        data=buf,
+        file_name="sustainability_survey_qr.png",
+        mime="image/png"
+    )
