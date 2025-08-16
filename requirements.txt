@@ -1,2 +1,8 @@
 # requirements.txt
 snowflake-connector-python
+streamlit
+gspread
+google-auth
+qrcode
+pillow
+
