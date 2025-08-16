@@ -10,7 +10,7 @@ from PIL import Image
 # ----------------------
 SPREADSHEET_NAME = "Sustainability Responses"
 CREDENTIALS_FILE = "credentials.json"  # Path to your Google API JSON key
-SURVEY_LINK = "https://surabhisustainablesurveyapp2025.streamlit.app/"  # Update after hosting
+SURVEY_LINK = "https://surabhisustainablesurveyappgrade6.streamlit.app/"  # Update after hosting
 
 # ----------------------
 # GOOGLE SHEETS SETUP
