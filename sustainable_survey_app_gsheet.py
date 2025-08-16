@@ -9,7 +9,7 @@ from PIL import Image
 # CONFIG - UPDATE THESE
 # ----------------------
 SPREADSHEET_NAME = "Sustainability Responses"
-CREDENTIALS_FILE = "credentials.json"  # Path to your Google API JSON key
+CREDENTIALS_FILE = "credentials_json.json"  # Path to your Google API JSON key
 SURVEY_LINK = "https://surabhisustainablesurveyappgrade6.streamlit.app/"  # Update after hosting
 
 # ----------------------
